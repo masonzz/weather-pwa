@@ -40,29 +40,38 @@ self.addEventListener('activate', function(e) {
     e.waitUntil(
         caches.keys().then(function(keyList) {
             return Promise.all(keyList.map(function(key) {
-                console.log('[ServiceWorker] Removing old cache', key);
                 if (key !== cacheName && key !== dataCacheName) {
+                    console.log('[ServiceWorker] Removing old cache', key);
                     return caches.delete(key);
                 }
             }));
         })
     );
+    return self.clients.claim();
 });
 
 self.addEventListener('fetch', function(e) {
     console.log('[ServiceWorker] Fetch', e.request.url);
-    var dataUrl = 'https://query.yahooapis.com/';
-    if (e.request.url.indexOf(dataUrl) === 0) {
+    var dataUrl = 'https://query.yahooapis.com/v1/public/yql';
+    if (e.request.url.indexOf(dataUrl) > -1) {
         // Put data handler code here
+        // e.respondWith(
+        //     fetch(e.request)
+        //         .then(function(response) {
+        //             return caches.open(dataCacheName).then(function(cache) {
+        //                 cache.put(e.request.url, response.clone());
+        //                 console.log('[ServiceWorker] Fetched&Cached Data');
+        //                 return response;
+        //             });
+        //         })
+        // );
         e.respondWith(
-            fetch(e.request)
-                .then(function(response) {
-                    return caches.open(dataCacheName).then(function(cache) {
-                        cache.put(e.request.url, response.clone());
-                        console.log('[ServiceWorker] Fetched&Cached Data');
-                        return response;
-                    });
-                })
+            caches.open(dataCacheName).then(function(cache) {
+                return fetch(e.request).then(function(response){
+                    cache.put(e.request.url, response.clone());
+                    return response;
+                });
+            })
         );
     } else {
         e.respondWith(

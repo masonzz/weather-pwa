@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "weather-pwa-9d6f0"
+    "default": "weather-pwa-d2c7c",
+    "weather": "weather-pwa-d2c7c"
   }
 }
